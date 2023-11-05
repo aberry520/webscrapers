@@ -1,5 +1,23 @@
-import requests, lxml, re, json, urllib.request
+import requests, lxml, re, json, urllib.request, psycopg2
 from bs4 import BeautifulSoup
+
+def connectDB():
+    try:
+        conn = psycopg2.connect(
+            host="dpg-cl0j56bjdq6s73dumo10-a.ohio-postgres.render.com",
+            port=5432,
+            user="austinberry",
+            password="vewEQRLd9gTDvJ6p9xw1HkTb34iXCbA3",
+            database="humid_oro",
+        )
+    except psycopg2.Error as e:
+        print("Error connecting to database:")
+        print(e)
+    else:
+        print("Connectione succesful")
+
+    conn.close()
+    print("disconnected")
 
 headers = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"
@@ -64,6 +82,6 @@ def get_original_images():
 
         # urllib.request.urlretrieve(original, f'Bs4_Images/original_size_img_{index}.jpg')
     print(google_images[0])
-    return google_images
+    return google_images[0]
 
 get_original_images()
