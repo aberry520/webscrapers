@@ -1,17 +1,34 @@
 import requests, lxml, re, json, urllib.request, psycopg2, os
 from bs4 import BeautifulSoup
 
+def get_cigars():
+    url = "https://cigars.p.rapidapi.com/cigars"
+    page = input("Page Number: ")
+    querystring = {"page":page}
+    headers = {
+        "X-RapidAPI-Key": "c404c0dfb7mshb5e1e6476869267p1d83fcjsne66a642aa104",
+        "X-RapidAPI-Host": "cigars.p.rapidapi.com"
+    }
+    response = requests.get(url, headers=headers, params=querystring)
+    dump = json.dumps(response.json())
+    return json.loads(dump)
 
 def get_names():
     search_names = []
-    with open('cigars.json') as cigars_json:
-        cigars_read = cigars_json.read()
+    # cigars_json = get_cigars()
+    # cigars_read = str(cigars_json)
+
+    # with open("cigars.json") as cigars_json_open:
+    #     cigars_read = cigars_json_open.read()
+
+    # print("JSON: ", cigars_json)
+    # print("Read: ",cigars_read)
     
-    parsed_json = json.loads(cigars_read)
+    parsed_json = get_cigars()
     cigar_dictionary = parsed_json["cigars"]
     for cigar in cigar_dictionary:
         search_names.append(cigar["name"])
-    # print(search_names)
+    print(search_names)
     return search_names
 
 def connectDB():
@@ -161,4 +178,6 @@ def get_images_by_name():
     
 get_images_by_name()
 print("file created")
+# get_cigars()
+# get_names()
 # get_images("13 Cigars Torpedo")
