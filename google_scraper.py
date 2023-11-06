@@ -1,5 +1,18 @@
-import requests, lxml, re, json, urllib.request, psycopg2
+import requests, lxml, re, json, urllib.request, psycopg2, os
 from bs4 import BeautifulSoup
+
+
+def get_names():
+    search_names = []
+    with open('cigars.json') as cigars_json:
+        cigars_read = cigars_json.read()
+    
+    parsed_json = json.loads(cigars_read)
+    cigar_dictionary = parsed_json["cigars"]
+    for cigar in cigar_dictionary:
+        search_names.append(cigar["name"])
+    # print(search_names)
+    return search_names
 
 def connectDB():
     try:
@@ -19,22 +32,36 @@ def connectDB():
     conn.close()
     print("disconnected")
 
-headers = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"
-}
-search = "site:cigarpage.com "+input("search: ")
-params = {
-    "q": search,                  # search query
-    "tbm": "isch",                # image results
-    "hl": "en",                   # language of the search
-    "gl": "us",                   # country where search comes from
-    "ijn": "0"                    # page number
-}
+def get_images(search_name):
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"
+    }
+    search = """
+    site:cigarpage.com OR 
+site:cigarsdaily.com OR 
+site:cigarsinternational.com OR 
+site:foxcigar.com OR 
+site:smallbatchcigar.com OR 
+site:perfectcigarblend.com OR 
+site:cigargod.com OR 
+site:thecigarthief.com OR 
+site:cigarandpipes.com OR 
+site:coronacigar.com OR 
+site:neptunecigar.com
+"""+search_name
 
-html = requests.get("https://www.google.com/search", params=params, headers=headers, timeout=30)
-soup = BeautifulSoup(html.text, "lxml")
-print(html.url)
-def get_original_images():
+    params = {
+        "q": search,                  # search query
+        "tbm": "isch",                # image results
+        "hl": "en",                   # language of the search
+        "gl": "us",                   # country where search comes from
+        "ijn": "0"                    # page number
+    }
+
+    html = requests.get("https://www.google.com/search", params=params, headers=headers, timeout=30)
+    soup = BeautifulSoup(html.text, "lxml")
+    # print(html.url)
+
     google_images = []
 
     all_script_tags = soup.select("script")
@@ -43,7 +70,7 @@ def get_original_images():
     
     matched_images_data_fix = json.dumps(matched_images_data)
     matched_images_data_json = json.loads(matched_images_data_fix)
-
+    
     matched_google_image_data = re.findall(r'\"b-GRID_STATE0\"(.*)sideChannel:\s?{}}', matched_images_data_json)
 
     matched_google_images_thumbnails = ", ".join(
@@ -69,7 +96,7 @@ def get_original_images():
     for thumbnail, original in zip(thumbnails, full_res_images):
         google_images.append({
             "thumbnail": thumbnail,
-            "original": original
+            "image": original
         })
 
 
@@ -81,7 +108,42 @@ def get_original_images():
         # urllib.request.install_opener(opener)
 
         # urllib.request.urlretrieve(original, f'Bs4_Images/original_size_img_{index}.jpg')
-    print(google_images[0])
-    return google_images[0]
+    # print(google_images[0])
+    # print(thumbnails)
+    if len(google_images) > 0:
+        return google_images[0]
+    else:
+        return None
 
-get_original_images()
+
+def get_images_by_name():
+    images_dictionary=[]
+    for name in get_names():
+        images_dictionary.append({"name":name, "images":get_images(name)})
+        
+    images_dictionary_string = json.dumps(images_dictionary, indent=4)
+
+    def make_file(filename):
+        """Creates a new file with the given filename. If the file already exists, the filename will be modified to make it unique."""
+
+        # Get the base filename and extension.
+        base_filename, extension = os.path.splitext(filename)
+
+        # Create a new filename if the original filename already exists.
+        if os.path.exists(filename):
+            counter = 1
+            while True:
+                new_filename = f"{base_filename}_{counter}{extension}"
+                if not os.path.exists(new_filename):
+                    filename = new_filename
+                    break
+                counter += 1
+
+        # Create the new file.
+        open(filename, "w").write(images_dictionary_string)
+
+        return filename
+    make_file("images.json")
+    
+get_images_by_name()
+print("file created")
