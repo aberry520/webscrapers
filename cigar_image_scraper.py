@@ -29,7 +29,7 @@ def get_names():
     for cigar in cigar_dictionary:
         search_names.append(cigar["name"])
     print(search_names)
-    return search_names
+    return cigar_dictionary
 
 def connectDB():
     try:
@@ -148,9 +148,9 @@ site:cubadoro.ch
 
 def get_images_by_name():
     images_dictionary=[]
-    for name in get_names():
-        images_dictionary.append({"name":name, "images":get_images(name)})
-        print(name+" images retrieved")
+    for cigar in get_names():
+        images_dictionary.append({"cigarID":cigar["cigarId"],"brandID":cigar["brandId"],"name":cigar["name"], "images":get_images(cigar["name"]),"length":cigar["length"],"ringGauge":cigar["ringGauge"],"country":cigar["country"],"filler":cigar["filler"],"wrapper":cigar["wrapper"],"color":cigar["color"],"strength":cigar["strength"]})
+        print(cigar["name"]+" images retrieved")
         
     images_dictionary_string = json.dumps(images_dictionary, indent=4)
 
