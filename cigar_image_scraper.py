@@ -185,7 +185,7 @@ def get_images_by_name():
         open(filename, "w").write(cigar_dictionary_string)
 
         return filename
-    make_file("images.json")
+    # make_file("images.json")
     
 def postDB():
     conn = connectDB()
@@ -195,14 +195,15 @@ def postDB():
         cur.execute(f"""INSERT INTO cigar_cigar (name,origin,wrapper,filler,strength,length,gauge,color,image,thumbnail) VALUES 
 ('{cigar["name"]}', '{cigar["country"]}', '{cigar["wrapper"]}', '{cigar["filler"]}', '{cigar["strength"]}', {cigar["length"]}, {cigar["ringGauge"]}, '{cigar["color"]}', '{cigar["images"]["image"]}', '{cigar["images"]["thumbnail"]}')""")
         print(cigar["name"]," inserted")
+    conn.commit()
     conn.close()
     print("disconnected")
     
 
 get_images_by_name()
 print("file created")
-# postDB()
-# print("completed")
+postDB()
+print("completed")
 
 # get_cigars()
 # get_names()
