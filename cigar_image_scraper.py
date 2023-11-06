@@ -1,6 +1,6 @@
 import requests, lxml, re, json, urllib.request, psycopg2, os
 from bs4 import BeautifulSoup
-
+cigar_dictionary=[]
 def get_cigars():
     url = "https://cigars.p.rapidapi.com/cigars"
     page = input("Page Number: ")
@@ -48,6 +48,7 @@ def connectDB():
 
     conn.close()
     print("disconnected")
+    return conn
 
 
 def get_images(search_name):
@@ -147,12 +148,12 @@ site:cubadoro.ch
 
 
 def get_images_by_name():
-    images_dictionary=[]
+    
     for cigar in get_names():
-        images_dictionary.append({"cigarID":cigar["cigarId"],"brandID":cigar["brandId"],"name":cigar["name"], "images":get_images(cigar["name"]),"length":cigar["length"],"ringGauge":cigar["ringGauge"],"country":cigar["country"],"filler":cigar["filler"],"wrapper":cigar["wrapper"],"color":cigar["color"],"strength":cigar["strength"]})
+        cigar_dictionary.append({"cigarID":cigar["cigarId"],"brandID":cigar["brandId"],"name":cigar["name"], "images":get_images(cigar["name"]),"length":cigar["length"],"ringGauge":cigar["ringGauge"],"country":cigar["country"],"filler":cigar["filler"],"wrapper":cigar["wrapper"],"color":cigar["color"],"strength":cigar["strength"]})
         print(cigar["name"]+" images retrieved")
         
-    images_dictionary_string = json.dumps(images_dictionary, indent=4)
+    cigar_dictionary_string = json.dumps(cigar_dictionary, indent=4)
 
     def make_file(filename):
         """Creates a new file with the given filename. If the file already exists, the filename will be modified to make it unique."""
@@ -171,11 +172,16 @@ def get_images_by_name():
                 counter += 1
 
         # Create the new file.
-        open(filename, "w").write(images_dictionary_string)
+        open(filename, "w").write(cigar_dictionary_string)
 
         return filename
     make_file("images.json")
     
+def postDB():
+    cigars = get_images_by_name()
+    conn = connectDB()
+    cur = conn.cursor()
+    cur.executemany("""INSERT INTO cigar_cigar(first_name,last_name) VALUES (%(first_name)s, %(last_name)s)""", cigars)
 get_images_by_name()
 print("file created")
 # get_cigars()
