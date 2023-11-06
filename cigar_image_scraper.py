@@ -28,7 +28,7 @@ def get_names():
     cigar_dictionary = parsed_json["cigars"]
     for cigar in cigar_dictionary:
         search_names.append(cigar["name"])
-    print(search_names)
+    # print(search_names)
     return cigar_dictionary
 
 def connectDB():
@@ -44,10 +44,10 @@ def connectDB():
         print("Error connecting to database:")
         print(e)
     else:
-        print("Connectione succesful")
+        print("Connected to database")
 
-    conn.close()
-    print("disconnected")
+    # conn.close()
+    # print("disconnected")
     return conn
 
 
@@ -116,6 +116,14 @@ site:cubadoro.ch
         ]
 
         for thumbnail, original in zip(thumbnails, full_res_images):
+            # if thumbnail is None:
+            #     thumb = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhbfuAyOVQmvnM1VFvh5h3xAUqKefmBb1AJmgtroiBHji_N1FXj0Sm_PoeBEAtHYfdLgw&usqp=CAU"
+            # else:
+            #     thumb = thumbnail
+            # if original is None:
+            #     orig = "https://m.media-amazon.com/images/I/41m4eJ5+NTS._AC_SY300_SX300_.jpg"
+            # else:
+            #     orig = original
             google_images.append({
                 "thumbnail": thumbnail,
                 "image": original
@@ -132,7 +140,10 @@ site:cubadoro.ch
             # urllib.request.urlretrieve(original, f'Bs4_Images/original_size_img_{index}.jpg')
         # print(google_images[0])
         # print(thumbnails)
-        
+        fail = {
+                "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhbfuAyOVQmvnM1VFvh5h3xAUqKefmBb1AJmgtroiBHji_N1FXj0Sm_PoeBEAtHYfdLgw&usqp=CAU",
+                "image": "https://m.media-amazon.com/images/I/41m4eJ5+NTS._AC_SY300_SX300_.jpg"
+            }
         if len(google_images) > 0:
             return google_images[0]
         else:
@@ -141,8 +152,7 @@ site:cubadoro.ch
             if count < 5:
                 count = count+1
             else:
-                None
-                break
+                return fail
 
             
 
@@ -178,12 +188,22 @@ def get_images_by_name():
     make_file("images.json")
     
 def postDB():
-    cigars = get_images_by_name()
     conn = connectDB()
     cur = conn.cursor()
-    cur.executemany("""INSERT INTO cigar_cigar(first_name,last_name) VALUES (%(first_name)s, %(last_name)s)""", cigars)
+    print("posting to DB")
+    for cigar in cigar_dictionary:
+        cur.execute(f"""INSERT INTO cigar_cigar (name,origin,wrapper,filler,strength,length,gauge,color,image,thumbnail) VALUES 
+('{cigar["name"]}', '{cigar["country"]}', '{cigar["wrapper"]}', '{cigar["filler"]}', '{cigar["strength"]}', {cigar["length"]}, {cigar["ringGauge"]}, '{cigar["color"]}', '{cigar["images"]["image"]}', '{cigar["images"]["thumbnail"]}')""")
+        print(cigar["name"]," inserted")
+    conn.close()
+    print("disconnected")
+    
+
 get_images_by_name()
 print("file created")
+# postDB()
+# print("completed")
+
 # get_cigars()
 # get_names()
 # get_images("13 Cigars Torpedo")
